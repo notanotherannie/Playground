@@ -1,0 +1,2058 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glass Dreams</title>
+  <link rel="icon" type="image/svg+xml" href="snow.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Herr+Von+Muellerhoff&family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Hanken+Grotesk:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/gifshot@0.4.5/dist/gifshot.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #121214;
+      --win-bg: #1e1e22;         /* Dark window frames for controls */
+      --panel-bg: #000000;
+      --border-color: #3a3a3e;   /* Muted dark border */
+      --text-color: #d4d4d4;     /* Light grey text on dark */
+      --text-muted: #888888;
+      --control-bg: #2a2a2e;     /* Dark input fields */
+      --titlebar-bg: #2a2a2e;    /* Dark titlebar */
+      --viewport-win-bg: #e0e0e0; /* Light grey only for viewport window chrome */
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: 'Hanken Grotesk', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+    #app-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 1280px;
+      margin: 15pt auto;
+      gap: 15px;
+    }
+    
+    /* Overlapping Graphic Typography Header */
+    #desktop-title {
+      position: relative;
+      width: 100%;
+      height: 150px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: 25px;
+      margin-bottom: 5px;
+      user-select: none;
+      padding-left: 20px;
+      padding-top: 35px;
+    }
+    .title-pre {
+      font-family: 'Bodoni Moda', serif;
+      font-size: 3.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #ffffff;
+      line-height: 1;
+      z-index: 2;
+      text-transform: uppercase;
+    }
+    .title-the {
+      font-family: 'Herr Von Muellerhoff', cursive;
+      font-size: 8rem;
+      color: #ffffff;
+      line-height: 1;
+      position: absolute;
+      left: 200px;
+      top: 20px;
+      z-index: 1;
+      opacity: 0.95;
+    }
+    .title-main {
+      font-family: 'Bodoni Moda', serif;
+      font-size: 3.8rem;
+      font-weight: 900;
+      letter-spacing: 2px;
+      color: #ffffff;
+      line-height: 1;
+      margin-left: 250px;
+      z-index: 2;
+    }
+
+    /* Menu Bar */
+    #desktop-menu {
+      width: 100%;
+      background: var(--win-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+    }
+    .menu-left {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+    .menu-brand {
+      font-family: 'Bodoni Moda', serif;
+      font-weight: 900;
+      font-style: italic;
+      font-size: 0.85rem;
+      margin-right: 14px;
+      color: var(--text-color);
+    }
+    .menu-item-container {
+      position: relative;
+      display: inline-block;
+    }
+    .menu-item {
+      cursor: pointer;
+      padding: 4px 10px;
+      user-select: none;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .menu-item:hover, .menu-item.active {
+      color: #ffffff;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background: var(--win-bg);
+      border: 1px solid var(--border-color);
+      display: none;
+      flex-direction: column;
+      min-width: 150px;
+      z-index: 10000;
+      margin-top: 4px;
+    }
+    .dropdown-option {
+      padding: 7px 14px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      text-align: left;
+      font-weight: 600;
+    }
+    .dropdown-option:hover {
+      background: var(--border-color);
+      color: #ffffff;
+    }
+
+    #telemetry-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .tel-divider {
+      opacity: 0.2;
+    }
+
+    /* Spatial Art Viewports Container */
+    #art-container {
+      width: 1280px;
+      height: 672px; /* 640px canvas + 32px header */
+      display: flex;
+      align-items: flex-start;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      overflow: visible;
+      position: relative;
+    }
+    #ascii-window, #dither-window {
+      width: 630px;
+      height: 672px;
+      flex: 0 0 630px;
+    }
+
+    /* OS Window Decorators (Defaults to Dark Theme for Controls & Engine) */
+    .window {
+      background: var(--win-bg);
+      border: 1px solid var(--border-color);
+      box-shadow: 4px 4px 0px #000000;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .window-header {
+      background: var(--titlebar-bg);
+      color: var(--text-color);
+      padding: 4px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.78rem;
+      height: 32px;
+      user-select: none;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .window-title {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .window-controls {
+      display: flex;
+      gap: 3px;
+    }
+    .win-btn {
+      width: 18px;
+      height: 18px;
+      background: var(--control-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .win-btn:hover {
+      background: var(--border-color);
+      color: #ffffff;
+    }
+    .win-btn.win-close {
+      background: #e85656;
+      color: #ffffff;
+      border-color: #e85656;
+    }
+    .win-btn.win-close:hover {
+      background: #ff7d7d;
+    }
+    .win-btn:active {
+      transform: translate(1px, 1px);
+    }
+    .window-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex: 1;
+    }
+
+
+
+    .panel-label {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
+      background: #000000;
+      border: 1.5px solid var(--border-color);
+      padding: 2px 6px;
+      border-radius: 2px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Spatial Workspace Layout */
+    #dashboard {
+      width: 1280px;
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      margin-top: 10px;
+      margin-bottom: 20px;
+    }
+    #dashboard .window:nth-child(1) { flex: 0 0 370px; }
+    #dashboard .window:nth-child(2) { flex: 0 0 500px; }
+    #dashboard .window:nth-child(3) { flex: 0 0 370px; }
+
+    .db-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+    .db-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+    }
+    .db-title {
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: var(--text-color);
+      border-bottom: 1.5px solid var(--border-color);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .slider-group {
+      margin-bottom: 12px;
+    }
+    .control-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .control-label-row span {
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-size: 0.78rem;
+      font-weight: 800;
+      color: var(--text-color);
+    }
+    .control-val {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #131417;
+      border: 1px solid var(--border-color);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 16px;
+      background: #4a4a4e;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+    }
+    select {
+      background: var(--control-bg);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 6px 8px;
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      width: 100%;
+      outline: none;
+    }
+    select:focus {
+      border-color: #ffffff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      background: var(--control-bg);
+      border: 1px solid var(--border-color);
+      color: #ffffff;
+      padding: 8px 14px;
+      font-family: 'Hanken Grotesk', sans-serif;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: none;
+      box-shadow: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    button:hover {
+      background: var(--border-color);
+    }
+    button:active {
+      transform: translate(1px, 1px);
+    }
+    .btn-primary {
+      font-weight: 800;
+    }
+    .btn-icon {
+      padding: 6px;
+      flex: 0 0 32px;
+      height: 30px;
+    }
+    #copy-toast {
+      position: fixed;
+      bottom: 30px;
+      background: var(--win-bg);
+      color: var(--text-color);
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      font-weight: 700;
+      font-size: 0.8rem;
+      box-shadow: 4px 4px 0px #000000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.2s ease;
+      z-index: 1000;
+      pointer-events: none;
+    }
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @keyframes wobble {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      15% { transform: translate(-4px, 2px) rotate(-0.5deg); }
+      30% { transform: translate(3px, -2px) rotate(0.4deg); }
+      45% { transform: translate(-2px, 1px) rotate(-0.2deg); }
+      60% { transform: translate(1px, -1px) rotate(0.1deg); }
+      75% { transform: translate(0px, 0px) rotate(0deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    .wobble-anim {
+      animation: wobble 0.5s ease both;
+    }
+    .sound-active {
+      background: #ffffff;
+      box-shadow: none;
+      transform: translate(2px, 2px);
+    }
+    
+    /* Help Modal Overlay */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    
+    /* Window Shade (Minimize Collapse) state */
+    .window.collapsed {
+      height: 32px !important;
+      min-height: 32px !important;
+    }
+    .window.collapsed .window-body,
+    .window.collapsed canvas,
+    .window.collapsed .panel-label {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app-wrapper">
+  <div id="desktop-menu">
+    <div class="menu-left">
+      <span class="menu-brand">SnowglobeOS</span>
+      <span class="menu-item" id="menu-restore">Restore</span>
+
+      <div class="menu-item-container">
+        <span class="menu-item">Controls</span>
+        <div class="dropdown-menu">
+          <div class="dropdown-option" id="menu-controls-play">Pause / Resume</div>
+          <div class="dropdown-option" id="menu-controls-shake">Shake Globe</div>
+          <div class="dropdown-option" id="menu-controls-mute">Mute / Unmute</div>
+          <div class="dropdown-option" id="menu-copy">Copy ASCII</div>
+        </div>
+      </div>
+
+      <span class="menu-item" id="menu-help">Help</span>
+    </div>
+    <div id="telemetry-bar">
+      <span>FPS: <span id="tel-fps">60</span></span>
+      <span class="tel-divider">|</span>
+      <span>AIR: <span id="tel-air">220</span></span>
+      <span class="tel-divider">|</span>
+      <span>DRIFT: <span id="tel-ground">0%</span></span>
+    </div>
+  </div>
+
+  <div id="desktop-title">
+    <span class="title-pre">THE</span>
+    <span class="title-the">Snow</span>
+    <span class="title-main">GLOBE</span>
+  </div>
+
+  <div id="art-container">
+    <div class="window" id="ascii-window" style="flex: 1; margin-bottom: 0;">
+      <div class="window-header">
+        <div class="window-title">
+          <span>ascii_viewport.exe</span>
+          <div class="window-title-lines"></div>
+        </div>
+        <div class="window-controls">
+          <div class="win-btn win-minimize">_</div>
+          <div class="win-btn win-maximize">□</div>
+          <div class="win-btn win-close">×</div>
+        </div>
+      </div>
+      <div style="background: #000; position: relative; flex: 1;">
+        <div class="panel-label">RENDER::ASCII_GRID</div>
+        <canvas id="ascii-canvas" width="640" height="640"></canvas>
+      </div>
+    </div>
+    
+    <div style="width: 20px;"></div>
+    
+    <div class="window" id="dither-window" style="flex: 1; margin-bottom: 0;">
+      <div class="window-header">
+        <div class="window-title">
+          <span>dither_viewport.exe</span>
+          <div class="window-title-lines"></div>
+        </div>
+        <div class="window-controls">
+          <div class="win-btn win-minimize">_</div>
+          <div class="win-btn win-maximize">□</div>
+          <div class="win-btn win-close">×</div>
+        </div>
+      </div>
+      <div style="background: #000; position: relative; flex: 1;">
+        <div class="panel-label">RENDER::DITHER_MATRIX</div>
+        <canvas id="dither-canvas" width="640" height="640"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div id="dashboard">
+    <!-- Window 3: ASCII Control -->
+    <div class="window" style="flex: 1;">
+      <div class="window-header">
+        <div class="window-title">
+          <span>ascii_control.sys</span>
+          <div class="window-title-lines"></div>
+        </div>
+        <div class="window-controls">
+          <div class="win-btn win-minimize">_</div>
+          <div class="win-btn win-close">×</div>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="control-group">
+          <div class="control-label-row"><span>Character Glyph Set</span></div>
+          <select id="sel-chars">
+            <option value="standard">Classic ASCII</option>
+            <option value="snowy">Snowy Dot Glyphs</option>
+            <option value="blocks">ANSI Blocks</option>
+            <option value="binary">Binary Bits</option>
+            <option value="matrix">Matrix Code</option>
+            <option value="dots">Vintage Dots</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="control-label-row"><span>Raster Tone Mode</span></div>
+          <select id="sel-ascii-mode">
+            <option value="monochrome">Terminal Monochrome</option>
+            <option value="color">Full Color Sampler</option>
+          </select>
+        </div>
+
+        <div class="control-group" style="margin-top: 6px;">
+          <div class="control-label-row"><span>Quick Actions</span></div>
+          <div style="display: flex; gap: 8px; flex-direction: column; margin-top: 4px;">
+            <button id="btn-copy-ascii" style="width: 100%;">Copy ASCII Text</button>
+            <div style="display: flex; gap: 8px; width: 100%;">
+              <button id="btn-save-ascii-png" style="flex: 1;">Save PNG</button>
+              <button id="btn-record-ascii-gif" style="flex: 1;">Record GIF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Window 4: Physics Engine -->
+    <div class="window" style="flex: 1.3;">
+      <div class="window-header">
+        <div class="window-title">
+          <span>physics_engine.sys</span>
+          <div class="window-title-lines"></div>
+        </div>
+        <div class="window-controls">
+          <div class="win-btn win-minimize">_</div>
+          <div class="win-btn win-close">×</div>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="control-group slider-group">
+          <div class="control-label-row">
+            <span>Gravity Acceleration</span>
+            <span class="control-val" id="lbl-gravity">0.03</span>
+          </div>
+          <input type="range" id="rng-gravity" min="0.005" max="0.1" step="0.005" value="0.03">
+        </div>
+        
+        <div class="control-group slider-group">
+          <div class="control-label-row">
+            <span>Wind Shear Velocity</span>
+            <span class="control-val" id="lbl-wind">0.00</span>
+          </div>
+          <input type="range" id="rng-wind" min="-0.06" max="0.06" step="0.005" value="0.00">
+        </div>
+        
+        <div class="control-group slider-group">
+          <div class="control-label-row">
+            <span>Snowflake Count</span>
+            <span class="control-val" id="lbl-flakes">220</span>
+          </div>
+          <input type="range" id="rng-flakes" min="50" max="500" step="10" value="220">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+          <div class="control-group">
+            <div class="control-label-row"><span>Sim FPS</span></div>
+            <select id="sel-fps">
+              <option value="60">60 FPS</option>
+              <option value="30">30 FPS</option>
+              <option value="20">20 FPS</option>
+              <option value="15">15 FPS</option>
+              <option value="10">10 FPS</option>
+              <option value="5">5 FPS</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <div class="control-label-row"><span>Drifts</span></div>
+            <select id="sel-accum">
+              <option value="on">Enabled</option>
+              <option value="off">Disabled</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 14px;">
+          <button id="btn-play" style="flex: 1;">Pause</button>
+          <button id="btn-shake" class="btn-primary" style="flex: 1.5;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            SHAKE GLOBE
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Window 5: Dither Control -->
+    <div class="window" style="flex: 1;">
+      <div class="window-header">
+        <div class="window-title">
+          <span>dither_control.sys</span>
+          <div class="window-title-lines"></div>
+        </div>
+        <div class="window-controls">
+          <div class="win-btn win-minimize">_</div>
+          <div class="win-btn win-close">×</div>
+        </div>
+      </div>
+      <div class="window-body">
+        <div class="control-group">
+          <div class="control-label-row"><span>Dither Algorithm</span></div>
+          <select id="sel-dither">
+            <option value="bayer8">Bayer 8x8</option>
+            <option value="bayer4">Bayer 4x4</option>
+            <option value="floyd">Floyd-Steinberg</option>
+            <option value="atkinson">Atkinson</option>
+            <option value="halftone">Vector Halftone</option>
+            <option value="none">Raw Pixel Art</option>
+          </select>
+        </div>
+
+
+        <div class="control-group" style="margin-top: 6px;">
+          <div class="control-label-row"><span>Ambient Wind Synth</span></div>
+          <div class="btn-row" style="margin-top: 4px; align-items: center; width: 100%;">
+            <button id="btn-audio" class="btn-icon">
+              <svg id="svg-mute" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+            </button>
+            <div class="control-group" style="flex: 1; justify-content: center;">
+              <input type="range" id="rng-volume" min="0" max="1" step="0.05" value="0.5" disabled>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 6px;">
+          <div class="control-label-row"><span>Dither Actions</span></div>
+          <div style="display: flex; gap: 8px; width: 100%; margin-top: 4px;">
+            <button id="btn-save-img" style="flex: 1;">Save PNG</button>
+            <button id="btn-record-dither-gif" style="flex: 1;">Record GIF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="copy-toast">ASCII Art Copied to Clipboard!</div>
+
+<!-- System Help Dialog Window Modal -->
+<div id="help-modal" class="modal-overlay">
+  <div class="window" style="width: 400px; box-shadow: 8px 8px 0px #000000;">
+    <div class="window-header">
+      <div class="window-title">
+        <span>system_help.hlp</span>
+        <div class="window-title-lines"></div>
+      </div>
+      <div class="window-controls">
+        <div class="win-btn" id="btn-close-help">×</div>
+      </div>
+    </div>
+    <div class="window-body" style="font-family: 'Hanken Grotesk', sans-serif; gap: 14px;">
+      <div style="font-family: 'Bodoni Moda', serif; font-size: 1.2rem; font-weight: 700; font-style: italic; border-bottom: 2px solid var(--border-color); padding-bottom: 6px;">
+        OS Keyboard Shortcuts
+      </div>
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 0.88rem; line-height: 1.4;">
+        <strong style="font-family: 'Fira Code', monospace; color: var(--text-color);">[Space]</strong>
+        <span>Play or pause simulation</span>
+        
+        <strong style="font-family: 'Fira Code', monospace; color: var(--text-color);">[S]</strong>
+        <span>Shake the globe (re-scatter snow)</span>
+        
+        <strong style="font-family: 'Fira Code', monospace; color: var(--text-color);">[M]</strong>
+        <span>Mute / Unmute ambient synthesizer</span>
+        
+        <strong style="font-family: 'Fira Code', monospace; color: var(--text-color);">[C]</strong>
+        <span>Copy structural ASCII to clipboard</span>
+      </div>
+      <button id="btn-ok-help" style="margin-top: 10px; width: 100%;">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PALETTES = {
+    frost: {
+      accent: "#a6c4f0",
+      skyStart: "#080a10", skyEnd: "#1b2230",
+      house: "#252932", roof: "#d4d8e0", window: "#a6c4f0",
+      trees: "#141b25", ground: "#e2e6ed", snow: "#ffffff",
+      base: "#11141a", plate: "#8a95a5", glass: "rgba(255, 255, 255, 0.12)",
+      ditherBlack: "#080a10", ditherWhite: "#e2e6ed",
+      rgbColors: [
+        {r: 8, g: 10, b: 16}, {r: 33, g: 41, b: 54},
+        {r: 138, g: 149, b: 165}, {r: 226, g: 230, b: 237}
+      ],
+      asciiForeground: "#a6c4f0", asciiBackground: "#080a10",
+      pageBg: "#121214", winBg: "#1e1e22", controlBg: "#2a2a2e", pageText: "#d4d4d4"
+    },
+    cyber: {
+      accent: "#ff007f",
+      skyStart: "#08020f", skyEnd: "#18042b",
+      house: "#121324", roof: "#00ffff", window: "#39ff14",
+      trees: "#6700b5", ground: "#ff007f", snow: "#00ffff",
+      base: "#0f0514", plate: "#ff007f", glass: "rgba(0, 255, 255, 0.2)",
+      ditherBlack: "#08020f", ditherWhite: "#00ffff",
+      rgbColors: [
+        {r: 8, g: 2, b: 15}, {r: 103, g: 0, b: 181},
+        {r: 255, g: 0, b: 127}, {r: 0, g: 255, b: 255}
+      ],
+      asciiForeground: "#ff007f", asciiBackground: "#08020f",
+      pageBg: "#09040e", winBg: "#1a1025", controlBg: "#0f0616", pageText: "#ff75f1"
+    },
+    phosphor: {
+      accent: "#33ff33",
+      skyStart: "#000000", skyEnd: "#000a00",
+      house: "#001a00", roof: "#33ff33", window: "#33ff33",
+      trees: "#003b00", ground: "#33ff33", snow: "#33ff33",
+      base: "#001100", plate: "#33ff33", glass: "rgba(51, 255, 51, 0.15)",
+      ditherBlack: "#000000", ditherWhite: "#33ff33",
+      rgbColors: [
+        {r: 0, g: 0, b: 0}, {r: 0, g: 51, b: 0},
+        {r: 0, g: 153, b: 0}, {r: 51, g: 255, b: 51}
+      ],
+      asciiForeground: "#33ff33", asciiBackground: "#000000",
+      pageBg: "#040704", winBg: "#0c150c", controlBg: "#050905", pageText: "#33ff33"
+    },
+    vapor: {
+      accent: "#ff75f1",
+      skyStart: "#3d0859", skyEnd: "#ff5e62",
+      house: "#008080", roof: "#ff75f1", window: "#ffff00",
+      trees: "#00f2fe", ground: "#e2afff", snow: "#ff75f1",
+      base: "#2e0854", plate: "#ff75f1", glass: "rgba(255, 117, 241, 0.2)",
+      ditherBlack: "#2e0854", ditherWhite: "#ff75f1",
+      rgbColors: [
+        {r: 46, g: 8, b: 84}, {r: 0, g: 128, b: 128},
+        {r: 255, g: 117, b: 241}, {r: 255, g: 246, b: 0}
+      ],
+      asciiForeground: "#ff75f1", asciiBackground: "#2e0854",
+      pageBg: "#04070e", winBg: "#0b1326", controlBg: "#050810", pageText: "#00f2fe"
+    }
+  };
+
+  const CHAR_SETS = {
+    standard: " .:-=+*#%@".split(""),
+    snowy: "  .·°*oO8@".split(""),
+    blocks: " ░▒▓█".split(""),
+    binary: " 01".split(""),
+    matrix: " ｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀ10".split(""),
+    dots: " ·:∴⁘⁙█".split("")
+  };
+
+  const ASCII_STRUCTURES = {
+    standard: { bg: " ", outline: "·", base: "-", plate: "=", shine: "·" },
+    snowy: { bg: " ", outline: "·", base: ".", plate: "·", shine: "·" },
+    blocks: { bg: " ", outline: " ", base: "▒", plate: "▓", shine: "░" },
+    binary: { bg: " ", outline: ".", base: "0", plate: "1", shine: " " },
+    matrix: { bg: " ", outline: ".", base: ":", plate: "+", shine: "/" },
+    dots: { bg: " ", outline: "·", base: "·", plate: "·", shine: " " }
+  };
+
+  const BAYER_4X4 = [
+    [0, 8, 2, 10],
+    [12, 4, 14, 6],
+    [3, 11, 1, 9],
+    [15, 7, 13, 5]
+  ].map(r => r.map(v => v / 16));
+
+  const BAYER_8X8 = [
+    [0, 48, 12, 60, 3, 51, 15, 63],
+    [32, 16, 44, 28, 35, 19, 47, 31],
+    [8, 56, 4, 52, 11, 59, 7, 55],
+    [40, 24, 36, 20, 43, 27, 39, 23],
+    [2, 50, 14, 62, 1, 49, 13, 61],
+    [34, 18, 46, 30, 33, 17, 45, 29],
+    [10, 58, 6, 54, 9, 57, 5, 53],
+    [42, 26, 38, 22, 41, 25, 37, 21]
+  ].map(r => r.map(v => v / 64));
+
+  const S = {
+    gravity: 0.03,
+    wind: 0.0,
+    maxFlakes: 220,
+    ditherMode: "bayer8",
+    charSet: "standard",
+    palette: "frost",
+    asciiMode: "monochrome",
+    volume: 0.5,
+    audioEnabled: false,
+    playing: true,
+    targetFps: 60,
+    driftEnabled: true
+  };
+
+  const cx = 80, cy = 75, R = 64;
+  let particles = [];
+  let smokeParticles = [];
+  let snowAccum = new Float32Array(160);
+  let stars = [];
+  let isShaking = false;
+  let shakeTimer = 0;
+  let frameCount = 0;
+  let lastTime = 0;
+  let fps = 60;
+  let mouseInGlobe = false;
+  let mouseSimX = 0, mouseSimY = 0;
+  let mouseSpeed = 0, prevMouseX = 0, prevMouseY = 0;
+
+  class WindSynth {
+    constructor() {
+      this.ctx = null;
+      this.noise = null;
+      this.filter = null;
+      this.gain = null;
+      this.initialized = false;
+    }
+    init() {
+      if (this.initialized) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioCtx();
+        
+        const size = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
+        
+        this.noise = this.ctx.createBufferSource();
+        this.noise.buffer = buffer;
+        this.noise.loop = true;
+        
+        this.filter = this.ctx.createBiquadFilter();
+        this.filter.type = 'bandpass';
+        this.filter.Q.value = 3.5;
+        this.filter.frequency.value = 350;
+        
+        this.gain = this.ctx.createGain();
+        this.gain.gain.value = 0.0;
+        
+        this.noise.connect(this.filter);
+        this.filter.connect(this.gain);
+        this.gain.connect(this.ctx.destination);
+        
+        this.noise.start();
+        this.initialized = true;
+      } catch (e) {
+        console.error("Web Audio fail", e);
+      }
+    }
+    update(speed, vol) {
+      if (!this.initialized) return;
+      if (this.ctx.state === 'suspended') this.ctx.resume();
+      
+      const targetGain = S.audioEnabled ? vol * (0.05 + speed * 0.15) : 0;
+      const targetFreq = 220 + speed * 600 + Math.sin(Date.now() * 0.002) * 50;
+      
+      this.gain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.1);
+      this.filter.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.15);
+    }
+  }
+  const windSynth = new WindSynth();
+
+  const miniCanvas = document.createElement('canvas');
+  miniCanvas.width = 160; miniCanvas.height = 160;
+  const miniCtx = miniCanvas.getContext('2d');
+  
+  const asciiCanvas = document.getElementById('ascii-canvas');
+  const asciiCtx = asciiCanvas.getContext('2d');
+  
+  const ditherCanvas = document.getElementById('dither-canvas');
+  const ditherCtx = ditherCanvas.getContext('2d');
+  
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = 160; offCanvas.height = 160;
+  const offCtx = offCanvas.getContext('2d');
+  
+  const tempDitherCanvas = document.createElement('canvas');
+  tempDitherCanvas.width = 160; tempDitherCanvas.height = 160;
+  const tempDitherCtx = tempDitherCanvas.getContext('2d');
+
+  const clamp = (val, min = 0, max = 255) => Math.max(min, Math.min(max, val));
+  const getGroundY = (x) => cy + R - 13 + Math.sin((x - cx) / 20) * 3.5;
+  
+  function isInsideGlobe(x, y) {
+    const dx = x - cx;
+    const dy = y - cy;
+    if (dx*dx + dy*dy <= R*R) return true;
+    if (y >= 133 && y <= 157) {
+      if (Math.abs(dx) <= 50 + (y - 133) * 0.45) return true;
+    }
+    if (y >= 153 && y <= 159) {
+      if (Math.abs(dx) <= 65) return true;
+    }
+    return false;
+  }
+
+  const hexToRgb = (hex) => {
+    const sh = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+    const fh = hex.replace(sh, (m, r, g, b) => r + r + g + g + b + b);
+    const res = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fh);
+    return res ? { r: parseInt(res[1], 16), g: parseInt(res[2], 16), b: parseInt(res[3], 16) } : { r: 0, g: 0, b: 0 };
+  };
+  const getClosestColor = (r, g, b, pal) => {
+    let minD = Infinity, closest = pal[0];
+    for (let i = 0; i < pal.length; i++) {
+      const c = pal[i];
+      const d = (r - c.r)**2 + (g - c.g)**2 + (b - c.b)**2;
+      if (d < minD) { minD = d; closest = c; }
+    }
+    return closest;
+  };
+
+  function initSimulation() {
+    particles = [];
+    smokeParticles = [];
+    snowAccum.fill(0);
+    
+    stars = [];
+    for (let i = 0; i < 24; i++) {
+      let sx, sy;
+      do {
+        sx = cx - R + Math.random() * 2 * R;
+        sy = cy - R + Math.random() * 2 * R;
+      } while ((sx - cx)**2 + (sy - cy)**2 > (R - 5)**2 || sy > getGroundY(sx) - 10);
+      stars.push({ x: sx, y: sy, bright: Math.random(), speed: 0.01 + Math.random() * 0.02 });
+    }
+    
+    for (let i = 0; i < S.maxFlakes; i++) {
+      spawnSnowflake(true);
+    }
+  }
+
+  function spawnSnowflake(randomY = false) {
+    let px, py;
+    do {
+      px = cx - R + Math.random() * 2 * R;
+      py = randomY ? (cy - R + Math.random() * 1.8 * R) : (cy - R + Math.random() * 10);
+    } while ((px - cx)**2 + (py - cy)**2 > (R - 2)**2);
+    
+    particles.push({
+      x: px, y: py,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: 0.3 + Math.random() * 0.5,
+      sz: 0.6 + Math.random() * 0.9,
+      isGrounded: false, groundTime: 0
+    });
+  }
+
+  function updatePhysics() {
+    if (particles.length < S.maxFlakes) {
+      while (particles.length < S.maxFlakes) spawnSnowflake(true);
+    } else if (particles.length > S.maxFlakes) {
+      particles.length = S.maxFlakes;
+    }
+
+    let swirlF = 0;
+    if (isShaking) {
+      swirlF = 0.04 * (shakeTimer / 35);
+      shakeTimer--;
+      if (shakeTimer <= 0) isShaking = false;
+    }
+
+    for (let x = 0; x < 160; x++) {
+      snowAccum[x] = Math.max(0, snowAccum[x] - 0.003);
+    }
+
+    particles.forEach(p => {
+      if (p.isGrounded) {
+        p.groundTime--;
+        if (p.groundTime <= 0) {
+          p.isGrounded = false;
+          p.x = cx - R + Math.random() * 2 * R;
+          p.y = cy - R + Math.random() * 8;
+          p.vx = (Math.random() - 0.5) * 0.4;
+          p.vy = 0.3 + Math.random() * 0.55;
+          const d = Math.sqrt((p.x - cx)**2 + (p.y - cy)**2);
+          if (d > R - 2) { p.x = cx + ((p.x - cx)/d)*(R-3); p.y = cy + ((p.y - cy)/d)*(R-3); }
+        }
+        return;
+      }
+
+      p.vy += S.gravity;
+      p.vx += S.wind + (Math.random() - 0.5) * 0.04;
+      
+      p.vx *= 0.98; p.vy *= 0.98;
+      
+      if (swirlF > 0) {
+        const dx = p.x - cx, dy = p.y - cy;
+        p.vx += -dy * swirlF + (Math.random() - 0.5) * 0.15;
+        p.vy += dx * swirlF - 0.05;
+      }
+
+      if (mouseInGlobe) {
+        const dx = p.x - mouseSimX, dy = p.y - mouseSimY;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 25 && d > 0.1) {
+          const push = (25 - d) / 25 * (0.05 + mouseSpeed * 0.08);
+          p.vx += (dx / d) * push;
+          p.vy += (dy / d) * push;
+        }
+      }
+
+      p.x += p.vx; p.y += p.vy;
+
+      const dx = p.x - cx, dy = p.y - cy;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist > R - 1.5) {
+        p.x = cx + (dx / dist) * (R - 2);
+        p.y = cy + (dy / dist) * (R - 2);
+        const nx = dx / dist, ny = dy / dist;
+        const dot = p.vx * nx + p.vy * ny;
+        p.vx = (p.vx - 2 * dot * nx) * 0.25;
+        p.vy = (p.vy - 2 * dot * ny) * 0.25;
+        if (ny > 0.4) p.vx += -nx * 0.03 * Math.sign(dx);
+      }
+
+      const px = Math.floor(p.x);
+      if (px >= 16 && px < 144) {
+        const groundThreshold = getGroundY(px) - snowAccum[px];
+        if (p.y >= groundThreshold) {
+          p.y = groundThreshold;
+          p.isGrounded = true;
+          p.vx = 0; p.vy = 0;
+          p.groundTime = 30 + Math.random() * 60;
+          
+          if (S.driftEnabled) {
+            snowAccum[px] = Math.min(18, snowAccum[px] + 0.18);
+            if (px > 16) snowAccum[px-1] = Math.min(18, snowAccum[px-1] + 0.09);
+            if (px < 143) snowAccum[px+1] = Math.min(18, snowAccum[px+1] + 0.09);
+          }
+        }
+      }
+    });
+
+    if (frameCount % 4 === 0 && smokeParticles.length < 25) {
+      smokeParticles.push({ x: 88, y: 92, vx: (Math.random() - 0.5) * 0.08, vy: -0.15 - Math.random() * 0.1, life: 1.0 });
+    }
+    
+    smokeParticles.forEach((sp, idx) => {
+      sp.vy -= 0.005;
+      sp.vx += S.wind * 0.2 + (Math.random() - 0.5) * 0.02;
+      sp.x += sp.vx; sp.y += sp.vy;
+      sp.life -= 0.012;
+      
+      const dx = sp.x - cx, dy = sp.y - cy;
+      if (dx*dx + dy*dy > (R - 2)**2 || sp.life <= 0) {
+        smokeParticles.splice(idx, 1);
+      }
+    });
+  }
+
+  function shakeGlobe() {
+    isShaking = true;
+    shakeTimer = 35;
+    
+    const art = document.getElementById('art-container');
+    art.classList.remove('wobble-anim');
+    void art.offsetWidth;
+    art.classList.add('wobble-anim');
+
+    particles.forEach(p => {
+      p.isGrounded = false;
+      p.vx = (Math.random() - 0.5) * 8;
+      p.vy = -1.5 - Math.random() * 4;
+    });
+
+    for (let x = 16; x < 144; x += 2) {
+      if (snowAccum[x] > 0.8) {
+        const count = Math.min(3, Math.floor(snowAccum[x] / 2));
+        for (let k = 0; k < count; k++) {
+          if (particles.length < 500) {
+            particles.push({
+              x: x, y: getGroundY(x) - snowAccum[x] * Math.random(),
+              vx: (Math.random() - 0.5) * 4,
+              vy: -1.0 - Math.random() * 3.5,
+              sz: 0.6 + Math.random() * 0.8,
+              isGrounded: false, groundTime: 0
+            });
+          }
+        }
+      }
+      snowAccum[x] = 0;
+    }
+  }
+
+  function renderOffscreen(pal) {
+    offCtx.clearRect(0, 0, 160, 160);
+    
+    offCtx.save();
+    offCtx.beginPath();
+    offCtx.arc(cx, cy, R, 0, Math.PI * 2);
+    offCtx.clip();
+
+    const skyGrad = offCtx.createRadialGradient(cx, cy - 20, 10, cx, cy, R);
+    skyGrad.addColorStop(0, pal.skyStart);
+    skyGrad.addColorStop(1, pal.skyEnd);
+    offCtx.fillStyle = skyGrad;
+    offCtx.fill();
+
+    stars.forEach(st => {
+      st.bright += st.speed;
+      if (st.bright > 1 || st.bright < 0) st.speed = -st.speed;
+      offCtx.fillStyle = `rgba(255, 255, 255, ${0.2 + clamp(st.bright) * 0.75})`;
+      offCtx.fillRect(st.x, st.y, 1, 1);
+    });
+
+    offCtx.fillStyle = pal.skyEnd;
+    offCtx.beginPath();
+    offCtx.moveTo(16, 120);
+    for (let x = 16; x <= 144; x += 4) {
+      offCtx.lineTo(x, 105 + Math.sin(x*0.06) * 5 + Math.cos(x*0.1) * 2);
+    }
+    offCtx.lineTo(144, 130);
+    offCtx.closePath();
+    offCtx.fill();
+
+    drawPineTree(42, getGroundY(42), pal);
+    drawPineTree(118, getGroundY(118), pal);
+
+    drawCabin(72, 107, pal);
+
+    smokeParticles.forEach(sp => {
+      offCtx.fillStyle = `rgba(180, 180, 180, ${sp.life * 0.35})`;
+      offCtx.beginPath();
+      offCtx.arc(sp.x, sp.y, 1.5 + (1 - sp.life) * 2, 0, Math.PI * 2);
+      offCtx.fill();
+    });
+
+    offCtx.fillStyle = pal.snow;
+    offCtx.beginPath();
+    offCtx.moveTo(16, getGroundY(16));
+    for (let x = 16; x <= 144; x++) {
+      offCtx.lineTo(x, getGroundY(x) - snowAccum[x]);
+    }
+    offCtx.lineTo(144, 150);
+    offCtx.lineTo(16, 150);
+    offCtx.closePath();
+    offCtx.fill();
+
+    offCtx.fillStyle = pal.snow;
+    particles.forEach(p => {
+      offCtx.fillRect(p.x - p.sz/2, p.y - p.sz/2, p.sz, p.sz);
+    });
+
+    offCtx.restore();
+    
+    offCtx.save();
+    offCtx.beginPath();
+    offCtx.arc(cx, cy, R, 0, Math.PI * 2);
+    offCtx.clip();
+    
+    const glassGrad = offCtx.createLinearGradient(cx - R, cy - R, cx + R, cy + R);
+    glassGrad.addColorStop(0, 'rgba(255,255,255,0.18)');
+    glassGrad.addColorStop(0.35, 'rgba(255,255,255,0.03)');
+    glassGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+    offCtx.fillStyle = glassGrad;
+    offCtx.fill();
+    offCtx.restore();
+
+    offCtx.fillStyle = pal.base;
+    offCtx.beginPath();
+    offCtx.moveTo(cx - 50, cy + R - 6);
+    offCtx.quadraticCurveTo(cx - 50, cy + R + 14, cx - 60, cy + R + 14);
+    offCtx.lineTo(cx + 60, cy + R + 14);
+    offCtx.quadraticCurveTo(cx + 50, cy + R + 14, cx + 50, cy + R - 6);
+    offCtx.closePath();
+    offCtx.fill();
+    
+    offCtx.fillStyle = pal.skyEnd;
+    offCtx.fillRect(cx - 65, cy + R + 14, 130, 6);
+    
+    offCtx.fillStyle = pal.plate;
+    offCtx.fillRect(cx - 18, cy + R + 2, 36, 8);
+    offCtx.fillStyle = pal.base;
+    offCtx.fillRect(cx - 12, cy + R + 5, 24, 2);
+  }
+
+  function drawPineTree(x, trunkY, pal) {
+    offCtx.fillStyle = pal.house;
+    offCtx.fillRect(x - 1, trunkY - 5, 2, 5);
+    
+    offCtx.fillStyle = pal.trees;
+    
+    for (let i = 0; i < 3; i++) {
+      const bottomY = trunkY - 4 - i * 6;
+      const w = 9 - i * 2.5;
+      const h = 8;
+      
+      offCtx.beginPath();
+      offCtx.moveTo(x - w, bottomY);
+      offCtx.lineTo(x, bottomY - h);
+      offCtx.lineTo(x + w, bottomY);
+      offCtx.closePath();
+      offCtx.fill();
+      
+      offCtx.fillStyle = pal.snow;
+      offCtx.beginPath();
+      offCtx.moveTo(x - w * 0.6, bottomY - h * 0.4);
+      offCtx.lineTo(x, bottomY - h);
+      offCtx.lineTo(x + w * 0.6, bottomY - h * 0.4);
+      offCtx.closePath();
+      offCtx.fill();
+      offCtx.fillStyle = pal.trees;
+    }
+  }
+
+  function drawCabin(x, y, pal) {
+    offCtx.fillStyle = pal.house;
+    offCtx.fillRect(x, y, 16, 15);
+    
+    offCtx.fillStyle = "#1e1e1e";
+    offCtx.fillRect(x + 12, y - 9, 2.5, 8);
+    
+    offCtx.fillStyle = pal.house;
+    offCtx.beginPath();
+    offCtx.moveTo(x - 2, y);
+    offCtx.lineTo(x + 8, y - 7);
+    offCtx.lineTo(x + 18, y);
+    offCtx.closePath();
+    offCtx.fill();
+    
+    offCtx.fillStyle = pal.snow;
+    offCtx.beginPath();
+    offCtx.moveTo(x - 2, y);
+    offCtx.lineTo(x + 8, y - 7);
+    offCtx.lineTo(x + 18, y);
+    offCtx.lineTo(x + 15, y + 0.5);
+    offCtx.lineTo(x + 8, y - 4.5);
+    offCtx.lineTo(x + 1, y + 0.5);
+    offCtx.closePath();
+    offCtx.fill();
+    
+    const flicker = 0.75 + Math.sin(Date.now() * 0.007) * 0.25;
+    offCtx.fillStyle = `rgba(255, 183, 3, ${flicker})`;
+    offCtx.fillRect(x + 3, y + 4, 4, 5);
+    
+    offCtx.fillStyle = "#110b07";
+    offCtx.fillRect(x + 9, y + 6, 4, 9);
+  }
+
+  function renderAscii(pal) {
+    const cols = 120, rows = 80;
+    const cellW = 640 / cols;
+    const cellH = 640 / rows;
+    
+    asciiCtx.fillStyle = pal.asciiBackground;
+    asciiCtx.fillRect(0, 0, 640, 640);
+    
+    asciiCtx.font = `${cellH * 1.05}px "Fira Code", "Courier New", monospace`;
+    asciiCtx.textAlign = 'center';
+    asciiCtx.textBaseline = 'middle';
+    
+    const imgD = offCtx.getImageData(0, 0, 160, 160);
+    const data = imgD.data;
+    const struct = ASCII_STRUCTURES[S.charSet];
+    const chars = CHAR_SETS[S.charSet];
+    const isMono = S.asciiMode === 'monochrome';
+    
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const sx = (c / cols) * 160;
+        const sy = (r / rows) * 160;
+        
+        const dx = sx - cx;
+        const dy = sy - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        const isBase = (sy >= 133 && sy <= 155 && Math.abs(dx) <= 50 + (sy - 133) * 0.45);
+        const isPlate = (sy > 155 && sy <= 159 && Math.abs(dx) <= 65);
+        const isOutline = (dist >= R - 2.5 && dist <= R + 0.5 && sy < 133);
+        const isInside = (dist < R - 2.5);
+        
+        let ch = " ";
+        let R_val = 0, G_val = 0, B_val = 0;
+        let overrideColor = null;
+        
+        if (isOutline) {
+          ch = struct.outline;
+          overrideColor = pal.accent;
+        } else if (isBase) {
+          ch = struct.base;
+          overrideColor = pal.house;
+        } else if (isPlate) {
+          ch = struct.plate;
+          overrideColor = pal.accent;
+        } else if (isInside) {
+          const idx = (Math.floor(sy) * 160 + Math.floor(sx)) * 4;
+          R_val = data[idx]; G_val = data[idx+1]; B_val = data[idx+2];
+          let brightness = (0.299 * R_val + 0.587 * G_val + 0.114 * B_val) / 255;
+          
+          const inShine = (dist >= R - 8 && dist <= R - 3 && dx < 0 && dy < 0);
+          if (inShine && brightness < 0.65) {
+            ch = struct.shine;
+            overrideColor = pal.accent;
+          } else {
+            brightness = clamp((brightness - 0.04) / 0.92, 0, 1);
+            brightness = brightness * brightness * (3 - 2 * brightness); // smoothstep
+            
+            if (S.charSet === 'binary') {
+              ch = (brightness < 0.12) ? " " : (brightness < 0.55 ? "0" : "1");
+            } else {
+              const charIdx = Math.floor(brightness * (chars.length - 1));
+              ch = chars[clamp(charIdx, 0, chars.length - 1)];
+            }
+          }
+        } else {
+          ch = struct.bg;
+        }
+        
+        if (isMono) {
+          asciiCtx.fillStyle = pal.asciiForeground;
+        } else {
+          asciiCtx.fillStyle = overrideColor ? overrideColor : `rgb(${R_val},${G_val},${B_val})`;
+        }
+        asciiCtx.fillText(ch, c * cellW + cellW/2, r * cellH + cellH/2);
+      }
+    }
+  }
+
+  function renderDither(pal) {
+    const imgD = offCtx.getImageData(0, 0, 160, 160);
+    const data = imgD.data;
+    const dMode = S.ditherMode;
+
+    if (dMode === 'halftone') {
+      drawHalftone(data, pal);
+      return;
+    }
+
+    if (dMode === 'none') {
+      ditherCtx.imageSmoothingEnabled = false;
+      ditherCtx.drawImage(offCanvas, 0, 0, 160, 160, 0, 0, 640, 640);
+      return;
+    }
+
+    const w = 160, h = 160;
+    const outData = new Uint8ClampedArray(w * h * 4);
+    
+    // Pre-fill with background color
+    const bgCol = hexToRgb(pal.ditherBlack);
+    for (let i = 0; i < w * h; i++) {
+      outData[i * 4] = bgCol.r;
+      outData[i * 4 + 1] = bgCol.g;
+      outData[i * 4 + 2] = bgCol.b;
+      outData[i * 4 + 3] = 255;
+    }
+
+    const rBuf = new Float32Array(w * h);
+    const gBuf = new Float32Array(w * h);
+    const bBuf = new Float32Array(w * h);
+    for (let i = 0; i < w * h; i++) {
+      rBuf[i] = data[i * 4];
+      gBuf[i] = data[i * 4 + 1];
+      bBuf[i] = data[i * 4 + 2];
+    }
+
+    if (dMode === 'bayer4' || dMode === 'bayer8') {
+      const is8 = dMode === 'bayer8';
+      const matrix = is8 ? BAYER_8X8 : BAYER_4X4;
+      const mSize = is8 ? 8 : 4;
+      const spread = 50;
+      
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          if (!isInsideGlobe(x, y)) continue;
+          
+          const off = (matrix[x % mSize][y % mSize] - 0.5) * spread;
+          const target = getClosestColor(
+            clamp(rBuf[idx] + off),
+            clamp(gBuf[idx] + off),
+            clamp(bBuf[idx] + off),
+            pal.rgbColors
+          );
+          writePix(outData, idx, target);
+        }
+      }
+    } 
+    else if (dMode === 'floyd') {
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          if (!isInsideGlobe(x, y)) continue;
+
+          const closest = getClosestColor(rBuf[idx], gBuf[idx], bBuf[idx], pal.rgbColors);
+          writePix(outData, idx, closest);
+          
+          const errR = rBuf[idx] - closest.r;
+          const errG = gBuf[idx] - closest.g;
+          const errB = bBuf[idx] - closest.b;
+          
+          const diff = (dx, dy, factor) => {
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h && isInsideGlobe(nx, ny)) {
+              const nIdx = ny * w + nx;
+              rBuf[nIdx] += errR * factor;
+              gBuf[nIdx] += errG * factor;
+              bBuf[nIdx] += errB * factor;
+            }
+          };
+          
+          diff(1, 0, 7/16);
+          diff(-1, 1, 3/16);
+          diff(0, 1, 5/16);
+          diff(1, 1, 1/16);
+        }
+      }
+    } 
+    else if (dMode === 'atkinson') {
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          if (!isInsideGlobe(x, y)) continue;
+
+          const closest = getClosestColor(rBuf[idx], gBuf[idx], bBuf[idx], pal.rgbColors);
+          writePix(outData, idx, closest);
+          
+          const errR = rBuf[idx] - closest.r;
+          const errG = gBuf[idx] - closest.g;
+          const errB = bBuf[idx] - closest.b;
+          
+          const diffAtk = (dx, dy) => {
+            const nx = x + dx, ny = y + dy;
+            if (nx >= 0 && nx < w && ny >= 0 && ny < h && isInsideGlobe(nx, ny)) {
+              const nIdx = ny * w + nx;
+              rBuf[nIdx] += errR / 8;
+              gBuf[nIdx] += errG / 8;
+              bBuf[nIdx] += errB / 8;
+            }
+          };
+          diffAtk(1, 0); diffAtk(2, 0);
+          diffAtk(-1, 1); diffAtk(0, 1); diffAtk(1, 1);
+          diffAtk(0, 2);
+        }
+      }
+    }
+
+    const outImgData = new ImageData(outData, w, h);
+    tempDitherCtx.putImageData(outImgData, 0, 0);
+    
+    ditherCtx.fillStyle = pal.ditherBlack;
+    ditherCtx.fillRect(0, 0, 640, 640);
+    
+    ditherCtx.imageSmoothingEnabled = false;
+    ditherCtx.drawImage(tempDitherCanvas, 0, 0, w, h, 0, 0, 640, 640);
+  }
+
+  function writePix(arr, idx, col) {
+    const o = idx * 4;
+    arr[o] = col.r; arr[o+1] = col.g; arr[o+2] = col.b; arr[o+3] = 255;
+  }
+  
+  function diffFS(r, g, b, idx, er, eg, eb, f) {
+    r[idx] += er * f; g[idx] += eg * f; b[idx] += eb * f;
+  }
+
+  function drawHalftone(data, pal) {
+    const cell = 6.4;
+    const cols = 640 / cell;
+    const rows = 640 / cell;
+    
+    ditherCtx.fillStyle = pal.ditherBlack;
+    ditherCtx.fillRect(0, 0, 640, 640);
+    ditherCtx.fillStyle = pal.ditherWhite;
+    
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const sx = Math.floor(((c + 0.5) / cols) * 160);
+        const sy = Math.floor(((r + 0.5) / rows) * 160);
+        
+        if (!isInsideGlobe(sx, sy)) continue;
+        
+        const idx = (sy * 160 + sx) * 4;
+        const gr = (0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2]) / 255;
+        const radius = gr * (cell / 2) * 1.15;
+        
+        if (radius > 0.4) {
+          ditherCtx.beginPath();
+          ditherCtx.arc(c * cell + cell/2, r * cell + cell/2, radius, 0, Math.PI * 2);
+          ditherCtx.fill();
+        }
+      }
+    }
+  }
+
+  let telFrameCount = 0;
+  let telLastTime = 0;
+
+  function updateTelemetry(timestamp) {
+    miniCtx.clearRect(0, 0, 160, 160);
+    miniCtx.drawImage(offCanvas, 0, 0);
+    
+    telFrameCount++;
+    if (timestamp - telLastTime >= 1000) {
+      fps = Math.round((telFrameCount * 1000) / (timestamp - telLastTime));
+      telFrameCount = 0;
+      telLastTime = timestamp;
+      document.getElementById('tel-fps').innerText = fps;
+    }
+    
+    const active = particles.filter(p => !p.isGrounded).length;
+    document.getElementById('tel-air').innerText = active;
+    
+    let sumDrift = 0;
+    for (let x = 16; x < 144; x++) sumDrift += snowAccum[x];
+    const maxPossDrift = (144 - 16) * 18;
+    const accumPct = Math.round((sumDrift / maxPossDrift) * 100);
+    document.getElementById('tel-ground').innerText = `${accumPct}%`;
+  }
+
+  let fpsInterval = 1000 / S.targetFps;
+  let lastFrameTime = 0;
+  
+  let recActive = false;
+  let recPanel = '';
+  let recFrames = [];
+  const recLimit = 35;
+  let recFrameCounter = 0;
+
+  function loop(timestamp) {
+    requestAnimationFrame(loop);
+    
+    if (!lastFrameTime) lastFrameTime = timestamp;
+    const elapsed = timestamp - lastFrameTime;
+    
+    if (elapsed >= fpsInterval) {
+      lastFrameTime = timestamp - (elapsed % fpsInterval);
+      
+      if (S.playing) {
+        updatePhysics();
+      }
+      
+      const pal = PALETTES[S.palette];
+      renderOffscreen(pal);
+      renderAscii(pal);
+      renderDither(pal);
+      
+      if (recActive) {
+        recFrameCounter++;
+        const skip = Math.max(1, Math.floor(S.targetFps / 15));
+        if (recFrameCounter % skip === 0) {
+          const activeCanvas = recPanel === 'ascii' ? asciiCanvas : ditherCanvas;
+          recFrames.push(activeCanvas.toDataURL('image/png'));
+          updateRecProgress();
+        }
+      }
+      
+      updateTelemetry(timestamp);
+
+      const air = particles.filter(p => !p.isGrounded).length / S.maxFlakes;
+      const soundSpeed = Math.abs(S.wind) * 4 + air * 0.4 + (isShaking ? (shakeTimer/35)*1.2 : 0);
+      windSynth.update(soundSpeed, S.volume);
+    }
+  }
+
+  function copyAscii() {
+    const cols = 120, rows = 80;
+    let txt = '';
+    
+    const imgD = offCtx.getImageData(0, 0, 160, 160);
+    const data = imgD.data;
+    
+    const struct = ASCII_STRUCTURES[S.charSet];
+    const chars = CHAR_SETS[S.charSet];
+    
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const sx = (c / cols) * 160;
+        const sy = (r / rows) * 160;
+        
+        const dx = sx - cx;
+        const dy = sy - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        const isBase = (sy >= 133 && sy <= 155 && Math.abs(dx) <= 50 + (sy - 133) * 0.45);
+        const isPlate = (sy > 155 && sy <= 159 && Math.abs(dx) <= 65);
+        const isOutline = (dist >= R - 2.5 && dist <= R + 0.5 && sy < 133);
+        const isInside = (dist < R - 2.5);
+        
+        if (isOutline) {
+          txt += struct.outline;
+        } else if (isBase) {
+          txt += struct.base;
+        } else if (isPlate) {
+          txt += struct.plate;
+        } else if (isInside) {
+          const idx = (Math.floor(sy) * 160 + Math.floor(sx)) * 4;
+          const R_val = data[idx], G_val = data[idx+1], B_val = data[idx+2];
+          let brightness = (0.299 * R_val + 0.587 * G_val + 0.114 * B_val) / 255;
+          
+          const inShine = (dist >= R - 8 && dist <= R - 3 && dx < 0 && dy < 0);
+          if (inShine && brightness < 0.65) {
+            txt += struct.shine;
+          } else {
+            brightness = clamp((brightness - 0.04) / 0.92, 0, 1);
+            brightness = brightness * brightness * (3 - 2 * brightness); // smoothstep
+            
+            if (S.charSet === 'binary') {
+              txt += (brightness < 0.12) ? " " : (brightness < 0.55 ? "0" : "1");
+            } else {
+              const charIdx = Math.floor(brightness * (chars.length - 1));
+              txt += chars[clamp(charIdx, 0, chars.length - 1)];
+            }
+          }
+        } else {
+          txt += struct.bg;
+        }
+      }
+      txt += '\n';
+    }
+    
+    navigator.clipboard.writeText(txt).then(() => {
+      showToast("ASCII Copied!");
+    }).catch(e => console.error("Clipboard blocked", e));
+  }
+
+  function setupEvents() {
+    const bindRng = (id, key, lblId, precision = 2) => {
+      const el = document.getElementById(id);
+      const lbl = document.getElementById(lblId);
+      el.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        S[key] = val;
+        lbl.innerText = val.toFixed(precision);
+      });
+    };
+    
+    bindRng('rng-gravity', 'gravity', 'lbl-gravity', 3);
+    bindRng('rng-wind', 'wind', 'lbl-wind', 2);
+    
+    const flakeRng = document.getElementById('rng-flakes');
+    const flakeLbl = document.getElementById('lbl-flakes');
+    flakeRng.addEventListener('input', (e) => {
+      S.maxFlakes = parseInt(e.target.value);
+      flakeLbl.innerText = S.maxFlakes;
+    });
+
+    document.getElementById('sel-dither').addEventListener('change', (e) => S.ditherMode = e.target.value);
+    document.getElementById('sel-chars').addEventListener('change', (e) => S.charSet = e.target.value);
+    document.getElementById('sel-ascii-mode').addEventListener('change', (e) => S.asciiMode = e.target.value);
+    
+    document.getElementById('sel-fps').addEventListener('change', (e) => {
+      S.targetFps = parseInt(e.target.value);
+      fpsInterval = 1000 / S.targetFps;
+    });
+    
+    document.getElementById('sel-accum').addEventListener('change', (e) => {
+      S.driftEnabled = (e.target.value === 'on');
+      if (!S.driftEnabled) snowAccum.fill(0);
+    });
+
+
+
+    document.getElementById('btn-shake').addEventListener('click', shakeGlobe);
+    
+    document.getElementById('btn-copy-ascii').addEventListener('click', copyAscii);
+    
+    document.getElementById('btn-save-ascii-png').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `snowglobe_ascii_${S.palette}.png`;
+      link.href = asciiCanvas.toDataURL('image/png');
+      link.click();
+      showToast("ASCII PNG Exported!");
+    });
+
+    document.getElementById('btn-save-img').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = `snowglobe_${S.palette}_${S.ditherMode}.png`;
+      link.href = ditherCanvas.toDataURL();
+      link.click();
+      showToast("Dither PNG Exported!");
+    });
+
+    // GIF Recording handlers
+    const startRecording = (panel) => {
+      if (recActive) return;
+      if (typeof gifshot === 'undefined') {
+        showToast("gifshot library not loaded yet.");
+        return;
+      }
+      recPanel = panel;
+      recFrames = [];
+      recFrameCounter = 0;
+      recActive = true;
+      showToast(`Recording ${panel.toUpperCase()} GIF...`);
+    };
+
+    document.getElementById('btn-record-ascii-gif').addEventListener('click', () => startRecording('ascii'));
+    document.getElementById('btn-record-dither-gif').addEventListener('click', () => startRecording('dither'));
+
+    function updateRecProgress() {
+      const pct = Math.round((recFrames.length / recLimit) * 100);
+      const btn = document.getElementById(recPanel === 'ascii' ? 'btn-record-ascii-gif' : 'btn-record-dither-gif');
+      btn.innerText = `● REC ${pct}%`;
+      
+      if (recFrames.length >= recLimit) {
+        recActive = false;
+        btn.innerText = "Encoding...";
+        btn.style.pointerEvents = "none";
+        
+        setTimeout(() => {
+          gifshot.createGIF({
+            images: recFrames,
+            gifWidth: 480,
+            gifHeight: 480,
+            interval: 1 / Math.min(15, S.targetFps),
+            numWorkers: 0
+          }, function(obj) {
+            if (!obj.error) {
+              const link = document.createElement('a');
+              link.download = `snowglobe_${recPanel}_${S.palette}.gif`;
+              link.href = obj.image;
+              link.click();
+              showToast("GIF Export Complete!");
+            } else {
+              console.error(obj.error);
+              showToast("GIF encoding failed.");
+            }
+            resetRecButtons();
+          });
+        }, 100);
+      }
+    }
+
+    function resetRecButtons() {
+      const bAscii = document.getElementById('btn-record-ascii-gif');
+      const bDither = document.getElementById('btn-record-dither-gif');
+      bAscii.innerText = "Record GIF";
+      bDither.innerText = "Record GIF";
+      bAscii.style.pointerEvents = "auto";
+      bDither.style.pointerEvents = "auto";
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('copy-toast');
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    const playBtn = document.getElementById('btn-play');
+    playBtn.addEventListener('click', () => {
+      S.playing = !S.playing;
+      playBtn.innerText = S.playing ? "Pause" : "Resume";
+    });
+
+    const audBtn = document.getElementById('btn-audio');
+    const muteSvg = document.getElementById('svg-mute');
+    const volRng = document.getElementById('rng-volume');
+    
+    const initAudioContext = () => {
+      windSynth.init();
+      document.removeEventListener('click', initAudioContext);
+      document.removeEventListener('keydown', initAudioContext);
+    };
+    document.addEventListener('click', initAudioContext);
+    document.addEventListener('keydown', initAudioContext);
+
+    audBtn.addEventListener('click', () => {
+      S.audioEnabled = !S.audioEnabled;
+      volRng.disabled = !S.audioEnabled;
+      if (S.audioEnabled) {
+        audBtn.classList.add('sound-active');
+        muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+      } else {
+        audBtn.classList.remove('sound-active');
+        muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>';
+      }
+    });
+
+    volRng.addEventListener('input', (e) => {
+      S.volume = parseFloat(e.target.value);
+    });
+
+    const artContainer = document.getElementById('art-container');
+    const handleMove = (clientX, clientY) => {
+      const rect = artContainer.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      
+      const px = x % 640;
+      mouseSimX = (px / 640) * 160;
+      mouseSimY = (y / 640) * 160;
+      
+      const dx = clientX - prevMouseX;
+      const dy = clientY - prevMouseY;
+      mouseSpeed = Math.sqrt(dx*dx + dy*dy);
+      
+      prevMouseX = clientX;
+      prevMouseY = clientY;
+      
+      if (mouseSpeed > 38 && !isShaking) {
+        shakeGlobe();
+      }
+    };
+
+    artContainer.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+    artContainer.addEventListener('mouseenter', () => mouseInGlobe = true);
+    artContainer.addEventListener('mouseleave', () => {
+      mouseInGlobe = false;
+      mouseSpeed = 0;
+    });
+
+    artContainer.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 0) {
+        mouseInGlobe = true;
+        handleMove(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    });
+    artContainer.addEventListener('touchend', () => {
+      mouseInGlobe = false;
+      mouseSpeed = 0;
+    });
+
+    const resizeApp = () => {
+      const wrapper = document.getElementById('app-wrapper');
+      const w = window.innerWidth;
+      const pad = 100;
+      const targetW = 1280;
+      if (w < targetW + pad) {
+        const sc = (w - pad) / targetW;
+        wrapper.style.transform = `scale(${sc})`;
+        wrapper.style.transformOrigin = 'top center';
+        document.body.style.height = `${(640 + 260) * sc + 80}px`;
+      } else {
+        wrapper.style.transform = 'none';
+        document.body.style.height = 'auto';
+      }
+    };
+    window.addEventListener('resize', resizeApp);
+    window.addEventListener('load', resizeApp);
+    resizeApp();
+
+    // Help Modal elements
+    const helpModal = document.getElementById('help-modal');
+    document.getElementById('btn-close-help').addEventListener('click', () => {
+      helpModal.style.display = 'none';
+    });
+    document.getElementById('btn-ok-help').addEventListener('click', () => {
+      helpModal.style.display = 'none';
+    });
+
+    // Dropdown toggle logic (Only for items in a menu-item-container)
+    const menuItems = document.querySelectorAll('.menu-item');
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    const menuContainers = document.querySelectorAll('.menu-item-container');
+
+    menuContainers.forEach(container => {
+      const item = container.querySelector('.menu-item');
+      const dropdown = container.querySelector('.dropdown-menu');
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const wasOpen = dropdown.style.display === 'flex';
+        
+        dropdowns.forEach(d => d.style.display = 'none');
+        menuItems.forEach(m => m.classList.remove('active'));
+
+        if (!wasOpen && dropdown) {
+          dropdown.style.display = 'flex';
+          item.classList.add('active');
+        }
+      });
+    });
+
+    document.addEventListener('click', () => {
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+    });
+
+    // Wire menu item direct actions
+    document.getElementById('menu-restore').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.window').forEach(win => {
+        win.style.display = 'flex';
+        win.classList.remove('collapsed');
+      });
+      showToast("All windows restored.");
+    });
+
+    document.getElementById('menu-help').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      helpModal.style.display = 'flex';
+    });
+
+    // Wire dropdown option actions
+    document.getElementById('menu-copy').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      copyAscii();
+    });
+
+    document.getElementById('menu-controls-play').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      S.playing = !S.playing;
+      document.getElementById('btn-play').innerText = S.playing ? "Pause" : "Resume";
+    });
+
+    document.getElementById('menu-controls-shake').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      shakeGlobe();
+    });
+
+    document.getElementById('menu-controls-mute').addEventListener('click', (e) => {
+      e.stopPropagation();
+      dropdowns.forEach(d => d.style.display = 'none');
+      menuItems.forEach(m => m.classList.remove('active'));
+      S.audioEnabled = !S.audioEnabled;
+      const audBtn = document.getElementById('btn-audio');
+      const muteSvg = document.getElementById('svg-mute');
+      const volRng = document.getElementById('rng-volume');
+      volRng.disabled = !S.audioEnabled;
+      if (S.audioEnabled) {
+        audBtn.classList.add('sound-active');
+        muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+      } else {
+        audBtn.classList.remove('sound-active');
+        muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>';
+      }
+    });
+
+    // Window Control actions (Minimize / Close)
+    document.querySelectorAll('.win-minimize').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const win = e.target.closest('.window');
+        win.classList.toggle('collapsed');
+      });
+    });
+    document.querySelectorAll('.win-close').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const win = e.target.closest('.window');
+        win.style.display = 'none';
+        showToast(`${win.querySelector('.window-header span').innerText} closed.`);
+      });
+    });
+
+    // Keyboard shortcuts (Space: play/pause, S: shake, M: mute, C: copy)
+    document.addEventListener('keydown', (e) => {
+      // Ignore if user is inside a form control or focused on a select element
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+        if (e.key === ' ' && document.activeElement.tagName === 'SELECT') {
+          return;
+        }
+        if (e.key === ' ' && document.activeElement.type === 'range') {
+          e.preventDefault();
+          S.playing = !S.playing;
+          document.getElementById('btn-play').innerText = S.playing ? "Pause" : "Resume";
+        }
+        return;
+      }
+      
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        S.playing = !S.playing;
+        document.getElementById('btn-play').innerText = S.playing ? "Pause" : "Resume";
+      } else if (e.key === 's' || e.key === 'S') {
+        shakeGlobe();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        S.audioEnabled = !S.audioEnabled;
+        const audBtn = document.getElementById('btn-audio');
+        const muteSvg = document.getElementById('svg-mute');
+        const volRng = document.getElementById('rng-volume');
+        volRng.disabled = !S.audioEnabled;
+        if (S.audioEnabled) {
+          audBtn.classList.add('sound-active');
+          muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+        } else {
+          audBtn.classList.remove('sound-active');
+          muteSvg.innerHTML = '<path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>';
+        }
+      } else if (e.key === 'c' || e.key === 'C') {
+        copyAscii();
+      }
+    });
+  }
+
+  initSimulation();
+  setupEvents();
+  lastTime = performance.now();
+  requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
